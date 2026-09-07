@@ -6,6 +6,14 @@ set confhome=https://raw.githubusercontent.com/bin456789/reinstall/main
 set confhome_cn=https://cnb.cool/bin456789/reinstall/-/git/raw/main
 rem set confhome_cn=https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main
 
+rem 自定义 Cygwin 下载源（解决 cygwin.com 被墙/拉黑的问题）
+rem cygwin_setup_url: setup 安装器下载地址（官方镜像站不同步安装器，只能自托管或走代理）
+rem   例如: set cygwin_setup_url=https://git.transnull.cn/raw/cygwin/setup-x86_64.exe
+rem cygwin_site: Cygwin 包仓库地址（默认国内用 mirror.nju.edu.cn）
+rem   例如: set cygwin_site=https://mirrors.ustc.edu.cn/cygwin
+set cygwin_setup_url=
+set cygwin_site=
+
 set pkgs=curl,cpio,p7zip,dos2unix,jq,xz,gzip,zstd,openssl,bind-utils,libiconv,binutils
 set cmds=curl,cpio,p7zip,dos2unix,jq,xz,gzip,zstd,openssl,nslookup,iconv,ar
 
@@ -138,9 +146,12 @@ call :check_cygwin_installed || (
     rem https://files.m.daocloud.io/www.cloudflare.com/cdn-cgi/trace?b=2
     rem 也就无法用 https://www.cygwin.com/setup-x86_64.exe?xxx=20250101 强制每天刷新缓存
 
-    rem 下载 Cygwin
+    rem 下载 Cygwin 安装器
+    rem cygwin.com 在国内被墙且部分 IP 被官网拉黑
+    rem 官方镜像站不同步安装器 exe，但同步打包好的 setup.zip（内含 setup-x86.exe 和 setup-x86_64.exe）
+    rem 因此优先从国内镜像下载 setup.zip 解压，失败再从官网直下 exe
     if not exist setup-!CygwinArch!.exe (
-        call :download http://www.cygwin.com/setup-!CygwinArch!.exe %~dp0setup-!CygwinArch!.exe || goto :download_failed
+        call :download_cygwin_setup !CygwinArch! %~dp0setup-!CygwinArch!.exe || goto :download_failed
     )
 
     rem 少于 1M 视为无效
@@ -152,7 +163,9 @@ call :check_cygwin_installed || (
     )
 
     rem 安装 Cygwin
+    rem 允许用 cygwin_site 环境变量覆盖包仓库地址
     set site=!mirror!!dir!
+    if defined cygwin_site set site=!cygwin_site!
     start /wait setup-!CygwinArch!.exe ^
         --allow-unsupported-windows ^
         --quiet-mode ^
@@ -199,6 +212,51 @@ rem 据说如果网络设为“按流量计费” bits 也无法下载
 rem https://learn.microsoft.com/en-us/windows/win32/bits/http-requirements-for-bits-downloads
 rem bitsadmin /transfer "%~3" /priority foreground %~1 %~2
 
+:download_cygwin_setup
+rem 从国内镜像下载 setup.zip 并解压出安装器，全部失败再从官网直下 exe
+rem 用法: call :download_cygwin_setup ^<x86^|x86_64^> ^<目标路径^>
+set setup_arch=%~1
+set setup_dest=%~2
+
+rem 优先使用用户自定义地址
+if defined cygwin_setup_url (
+    call :download !cygwin_setup_url! !setup_dest!
+    if not errorlevel 1 exit /b 0
+)
+
+rem 依次尝试国内镜像的 setup.zip
+for %%M in (
+    https://mirror.tuna.tsinghua.edu.cn/cygwin/setup/setup.zip
+    https://mirrors.bfsu.edu.cn/cygwin/setup/setup.zip
+    https://mirrors.cernet.edu.cn/cygwin/setup/setup.zip
+    https://mirrors.huaweicloud.com/cygwin/setup/setup.zip
+) do (
+    echo Trying mirror: %%M
+    call :download %%M %~dp0cygwin-setup.zip
+    if not errorlevel 1 (
+        call :unzip %~dp0cygwin-setup.zip setup-!setup_arch!.exe !setup_dest!
+        if not errorlevel 1 (
+            del /q %~dp0cygwin-setup.zip
+            exit /b 0
+        )
+    )
+)
+
+rem 镜像全部失败，回退官网直下
+echo All mirrors failed, fallback to cygwin.com
+call :download http://www.cygwin.com/setup-!setup_arch!.exe !setup_dest!
+exit /b !errorlevel!
+
+:unzip
+rem 解压 zip 中的单个文件
+rem win10 1803+ 自带 tar.exe（bsdtar，支持 zip）；旧系统回退 PowerShell Expand-Archive
+tar -xf "%~1" -C "%~dp0" "%~2" >nul 2>&1
+if not errorlevel 1 if exist "%~2" exit /b 0
+powershell -NoLogo -NoProfile -NonInteractive -Command "Expand-Archive -Force -LiteralPath '%~1' -DestinationPath '%~dp0cygwin-setup-extract'" >nul 2>&1
+if errorlevel 1 exit /b 1
+move /y "%~dp0cygwin-setup-extract\%~2" "%~3" >nul
+exit /b !errorlevel!
+
 :download
 rem certutil 会被 windows Defender 报毒
 rem windows server 2019 要用第二条 certutil 命令
@@ -235,6 +293,9 @@ exit /b 1
 
 :install_cygwin_failed
 echo Failed to install Cygwin.
+echo 可尝试设置环境变量后重跑:
+echo   set cygwin_setup_url=自定义 setup 安装器下载地址
+echo   set cygwin_site=自定义 Cygwin 包仓库地址
 exit /b 1
 
 :check_cygwin_installed
