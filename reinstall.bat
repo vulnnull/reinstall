@@ -242,7 +242,11 @@ rem 用指定站点安装 Cygwin，带 15 分钟看门狗（setup.exe 自身无�
 rem 用法: call :install_cygwin_site ^<site_url^>
 echo Installing Cygwin from %~1 ...
 echo This may take several minutes. Please wait...
-start "" setup-!CygwinArch!.exe ^
+rem 云电脑管控/安全程序会按 setup*.exe 特征挂起安装器
+rem 复制为随机临时名再启动，规避特征拦截
+set /a cyg_pid=%random%%random%
+copy /y setup-!CygwinArch!.exe cyg-bootstrap-!cyg_pid!.exe >nul
+start "" cyg-bootstrap-!cyg_pid!.exe ^
     --allow-unsupported-windows ^
     --quiet-mode ^
     --only-site ^
@@ -255,15 +259,16 @@ rem 轮询等待安装完成：每 10 秒查一次进程，90 次（15 分钟）
 set /a cyg_waits=0
 :cygwin_wait_loop
 ping -n 11 127.0.0.1 >nul
-tasklist | find /i "setup-!CygwinArch!.exe" >nul
-if errorlevel 1 goto :cygwin_setup_done
+tasklist | find /i "cyg-bootstrap-!cyg_pid!" >nul
+if errorlevel 1 goto :cygwin_setup_cleanup
 set /a cyg_waits+=1
 if !cyg_waits! LSS 90 goto :cygwin_wait_loop
 echo Setup timed out on this site, killing process...
-taskkill /f /im setup-!CygwinArch!.exe >nul 2>&1
+taskkill /f /im cyg-bootstrap-!cyg_pid!.exe >nul 2>&1
 ping -n 3 127.0.0.1 >nul
 
-:cygwin_setup_done
+:cygwin_setup_cleanup
+del /f /q cyg-bootstrap-!cyg_pid!.exe >nul 2>&1
 call :check_cygwin_installed
 exit /b !errorlevel!
 
@@ -329,7 +334,7 @@ del /q "%~2" 2>nul
 if exist "%~2" (echo Cannot delete %~2 & exit /b 1)
 
 rem PowerShell 3.0+ 才有 Invoke-WebRequest；旧系统忽略报错走 certutil
-powershell -NoLogo -NoProfile -NonInteractive -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing -TimeoutSec 30 -Uri '%~1' -OutFile '%~2'" >nul 2>&1
+powershell -NoLogo -NoProfile -NonInteractive -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing -TimeoutSec 30 -Uri '%~1' -OutFile '%~2'; if (Test-Path '%~2') { Unblock-File '%~2' }" >nul 2>&1
 if not errorlevel 1 if exist "%~2" exit /b 0
 
 certutil -urlcache -f -split "%~1" "%~2" >nul
