@@ -166,24 +166,34 @@ call :check_cygwin_installed || (
 
     rem 安装 Cygwin
     rem 允许用 cygwin_site 环境变量覆盖包仓库地址
-    set site=!mirror!!dir!
-    if defined cygwin_site set site=!cygwin_site!
-    echo Installing Cygwin from !site! ...
-    echo This may take several minutes. Please wait...
-    start /wait setup-!CygwinArch!.exe ^
-        --allow-unsupported-windows ^
-        --quiet-mode ^
-        --only-site ^
-        --site !site! ^
-        --root %SystemDrive%\cygwin ^
-        --local-package-dir %~dp0cygwin-local-package-dir ^
-        --packages %pkgs%
+    rem 单一镜像不稳定（setup.exe 下载包时可能挂住），因此多站点轮询重试
+    if defined cygwin_site (
+        set site_list=!cygwin_site!
+    ) else if !CygwinEOL! == 1 (
+        rem cygwin-archive 只有 NJU 有镜像
+        set site_list=http://mirror.nju.edu.cn/sourceware/cygwin-archive/20221123
+    ) else (
+        set site_list=https://mirror.nju.edu.cn/cygwin https://mirrors.ustc.edu.cn/cygwin https://mirrors.aliyun.com/cygwin https://mirrors.huaweicloud.com/cygwin
+    )
 
-    rem 检查 Cygwin 是否成功安装
-    if errorlevel 1 goto :install_cygwin_failed
-    call :check_cygwin_installed || goto :install_cygwin_failed
+    for %%S in (!site_list!) do (
+        echo Installing Cygwin from %%S ...
+        echo This may take several minutes. Please wait...
+        start /wait setup-!CygwinArch!.exe ^
+            --allow-unsupported-windows ^
+            --quiet-mode ^
+            --only-site ^
+            --site %%S ^
+            --root %SystemDrive%\cygwin ^
+            --local-package-dir %~dp0cygwin-local-package-dir ^
+            --packages %pkgs%
+        call :check_cygwin_installed && goto :cygwin_installed
+        echo Site %%S failed, trying next...
+    )
+    goto :install_cygwin_failed
 )
 
+:cygwin_installed
 rem 在c盘根目录下执行 cygpath -ua . 会得到 /cygdrive/c，因此末尾要有 /
 for /f %%a in ('%SystemDrive%\cygwin\bin\cygpath -ua ./') do set thisdir=%%a
 
