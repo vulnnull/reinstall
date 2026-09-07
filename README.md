@@ -103,10 +103,10 @@
 curl -O https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
-国内服务器（与原版相同，使用 cnb.cool 国内镜像仓）：
+国内服务器（cnb.cool 副本）：
 
 ```bash
-curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 ## 下载（当前系统是 <img width="20" height="20" src="https://blogs.windows.com/wp-content/uploads/prod/2022/09/cropped-Windows11IconTransparent512-32x32.png" /> Windows）
@@ -166,14 +166,10 @@ reinstall.bat debian 12 --password xxx
 certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
-国内服务器：
-
-> [!NOTE]
-> 本 fork 的 Cygwin 镜像修复只在 `reinstall.bat` 中，`cnb.cool` 镜像仓是上游的、不含此修复，
-> 因此 Windows 国内下载走 GitHub 加速获取 fork 版本。
+国内服务器（cnb.cool 副本）：
 
 ```batch
-certutil -urlcache -f -split https://gh-proxy.com/https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
+certutil -urlcache -f -split https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.bat
 ```
 
 ## 使用

@@ -99,10 +99,10 @@ For server outside China:
 curl -O https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
-For server inside China (same as upstream, via the cnb.cool mirror):
+For servers inside China (via the cnb.cool mirror of this fork):
 
 ```bash
-curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 ## Download (Current system is <img width="20" height="20" src="https://blogs.windows.com/wp-content/uploads/prod/2022/09/cropped-Windows11IconTransparent512-32x32.png" /> Windows)
@@ -132,10 +132,10 @@ For server outside China:
 certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
-For server inside China:
+For server inside China (via the cnb.cool mirror of this fork):
 
 ```batch
-certutil -urlcache -f -split https://gh-proxy.com/https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
+certutil -urlcache -f -split https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.bat
 ```
 
 ## Usage
