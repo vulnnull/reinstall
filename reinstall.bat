@@ -168,6 +168,8 @@ call :check_cygwin_installed || (
     rem 允许用 cygwin_site 环境变量覆盖包仓库地址
     set site=!mirror!!dir!
     if defined cygwin_site set site=!cygwin_site!
+    echo Installing Cygwin from !site! ...
+    echo This may take several minutes. Please wait...
     start /wait setup-!CygwinArch!.exe ^
         --allow-unsupported-windows ^
         --quiet-mode ^
@@ -186,6 +188,7 @@ rem 在c盘根目录下执行 cygpath -ua . 会得到 /cygdrive/c，因此末尾
 for /f %%a in ('%SystemDrive%\cygwin\bin\cygpath -ua ./') do set thisdir=%%a
 
 rem 下载 reinstall.sh
+echo Checking reinstall.sh ...
 if not exist reinstall.sh (
     call :download_with_curl %confhome%/reinstall.sh %thisdir%reinstall.sh || goto :download_failed
     call :chmod a+x %thisdir%reinstall.sh
@@ -205,6 +208,7 @@ rem %SystemDrive%\cygwin\bin\bash -l %thisdir%reinstall.sh %* 运行后会清屏
 rem 因此不能用 -l
 rem 这就需要在 reinstall.sh 里运行 source /etc/profile
 rem 或者添加 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+echo Running reinstall.sh ...
 %SystemDrive%\cygwin\bin\bash %thisdir%reinstall.sh %*
 exit /b
 
