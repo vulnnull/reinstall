@@ -262,9 +262,15 @@ exit /b !errorlevel!
 :download
 rem certutil 会被 windows Defender 报毒
 rem windows server 2019 要用第二条 certutil 命令
+rem certutil 没有超时机制，目标不可达时会无限期挂起
+rem 因此优先用 PowerShell 下载（-TimeoutSec 30 秒超时），失败再回退 certutil
 echo Downloading: %~1 %~2
 del /q "%~2" 2>nul
 if exist "%~2" (echo Cannot delete %~2 & exit /b 1)
+
+rem PowerShell 3.0+ 才有 Invoke-WebRequest；旧系统忽略报错走 certutil
+powershell -NoLogo -NoProfile -NonInteractive -Command "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -UseBasicParsing -TimeoutSec 30 -Uri '%~1' -OutFile '%~2'" >nul 2>&1
+if not errorlevel 1 if exist "%~2" exit /b 0
 
 certutil -urlcache -f -split "%~1" "%~2" >nul
 if not errorlevel 1 if exist "%~2" exit /b 0
