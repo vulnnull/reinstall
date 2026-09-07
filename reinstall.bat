@@ -177,18 +177,8 @@ call :check_cygwin_installed || (
     )
 
     for %%S in (!site_list!) do (
-        echo Installing Cygwin from %%S ...
-        echo This may take several minutes. Please wait...
-        start /wait setup-!CygwinArch!.exe ^
-            --allow-unsupported-windows ^
-            --quiet-mode ^
-            --only-site ^
-            --site %%S ^
-            --root %SystemDrive%\cygwin ^
-            --local-package-dir %~dp0cygwin-local-package-dir ^
-            --packages %pkgs%
-        call :check_cygwin_installed && goto :cygwin_installed
-        echo Site %%S failed, trying next...
+        call :install_cygwin_site %%S && goto :cygwin_installed
+        echo Site %%S failed or timed out, trying next...
     )
     goto :install_cygwin_failed
 )
@@ -227,6 +217,36 @@ rem cloudflare 的 cdn-cgi/trace 没有 Content-Length
 rem 据说如果网络设为“按流量计费” bits 也无法下载
 rem https://learn.microsoft.com/en-us/windows/win32/bits/http-requirements-for-bits-downloads
 rem bitsadmin /transfer "%~3" /priority foreground %~1 %~2
+
+:install_cygwin_site
+rem 用指定站点安装 Cygwin，带 15 分钟看门狗（setup.exe 自身无超时，镜像挂住时强杀换站）
+rem 用法: call :install_cygwin_site ^<site_url^>
+echo Installing Cygwin from %~1 ...
+echo This may take several minutes. Please wait...
+start "" setup-!CygwinArch!.exe ^
+    --allow-unsupported-windows ^
+    --quiet-mode ^
+    --only-site ^
+    --site %~1 ^
+    --root %SystemDrive%\cygwin ^
+    --local-package-dir %~dp0cygwin-local-package-dir ^
+    --packages %pkgs%
+
+rem 轮询等待安装完成：每 10 秒查一次进程，90 次（15 分钟）超时强杀
+set /a cyg_waits=0
+:cygwin_wait_loop
+ping -n 11 127.0.0.1 >nul
+tasklist | find /i "setup-!CygwinArch!.exe" >nul
+if errorlevel 1 goto :cygwin_setup_done
+set /a cyg_waits+=1
+if !cyg_waits! LSS 90 goto :cygwin_wait_loop
+echo Setup timed out on this site, killing process...
+taskkill /f /im setup-!CygwinArch!.exe >nul 2>&1
+ping -n 3 127.0.0.1 >nul
+
+:cygwin_setup_done
+call :check_cygwin_installed
+exit /b !errorlevel!
 
 :download_cygwin_setup
 rem 下载 Cygwin 安装器：cygwin_setup_url 自定义地址 → 国内镜像 setup.zip → 官网直下
