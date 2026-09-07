@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is a fork of [bin456789/reinstall](https://github.com/bin456789/reinstall), maintained by [vulnnull](https://github.com/vulnnull).
 >
-> **Changes in this fork**: The Cygwin installer download on Windows now tries Chinese mirrors first (TUNA / BFSU / CERNET / Huawei Cloud) before falling back to cygwin.com, and supports the `cygwin_setup_url` / `cygwin_site` environment variables for custom sources. See [README.md](README.md) (Chinese) for details.
+> **Changes in this fork**: The Cygwin installer download on Windows supports the `cygwin_setup_url` / `cygwin_site` environment variables for custom sources (cygwin.com is blocked for many Chinese IPs). Note that Chinese mirrors do NOT carry the installer, and their `cygwin/setup/setup.zip` is deliberately encrypted and unusable. See [README.md](README.md) (Chinese) for details.
 
 # reinstall
 
@@ -102,7 +102,7 @@ curl -O https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh |
 For server inside China:
 
 ```bash
-curl -O https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://ghproxy.imciel.com/https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 ## Download (Current system is <img width="20" height="20" src="https://blogs.windows.com/wp-content/uploads/prod/2022/09/cropped-Windows11IconTransparent512-32x32.png" /> Windows)
@@ -135,7 +135,7 @@ certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstal
 For server inside China:
 
 ```batch
-certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
+certutil -urlcache -f -split https://ghproxy.imciel.com/https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
 ## Usage

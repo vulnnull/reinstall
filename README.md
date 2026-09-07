@@ -7,8 +7,8 @@
 >
 > **本 fork 的改动**：
 >
-> - Windows 下 Cygwin 安装器下载改为国内镜像优先（清华 TUNA / 北外 / CERNET / 华为云），全部失败再回退 `cygwin.com` 官网，解决官网被墙、部分 IP 被拉黑的问题
-> - 新增环境变量 `cygwin_setup_url` / `cygwin_site`，可自定义 Cygwin 安装器下载地址与包仓库地址
+> - Windows 下 Cygwin 安装器下载支持 `cygwin_setup_url` / `cygwin_site` 环境变量自定义下载源，解决 `cygwin.com` 被墙、部分 IP 被拉黑的问题
+> - 注意：国内镜像站的 `cygwin/setup/setup.zip` 带有故意的加密标志位（防止未认证使用），无法解压出安装器，不要尝试从镜像提取
 > - 详见 [reinstall.bat](reinstall.bat) 中的 `:download_cygwin_setup` 部分
 
 [![Codacy](https://img.shields.io/codacy/grade/dc679a17751448628fe6d8ac35e26eed?logo=Codacy&label=Codacy&style=flat-square)](https://app.codacy.com/gh/bin456789/reinstall/dashboard)
@@ -134,22 +134,23 @@ curl -O https://ghproxy.imciel.com/https://raw.githubusercontent.com/vulnnull/re
 
 <summary>解决 Cygwin 安装器下载失败（被墙 / IP 被拉黑）</summary>
 
-`reinstall.bat` 下载 Cygwin 安装器时会自动依次尝试国内镜像的 `setup.zip`（内含官方安装器，与官网同源）：
+> [!WARNING]
+> 国内镜像站（TUNA / 北外 / CERNET / 华为云等）**不同步** `setup-x86_64.exe` 安装器；
+> 它们目录里的 `cygwin/setup/setup.zip` 带有**故意的加密标志位**（镜像 README 明确要求"不要使用这些文件"），
+> 无法解压出安装器，请勿尝试从镜像提取。
 
-1. 清华 TUNA - `https://mirror.tuna.tsinghua.edu.cn/cygwin/setup/setup.zip`
-2. 北外 BFSU - `https://mirrors.bfsu.edu.cn/cygwin/setup/setup.zip`
-3. CERNET - `https://mirrors.cernet.edu.cn/cygwin/setup/setup.zip`
-4. 华为云 - `https://mirrors.huaweicloud.com/cygwin/setup/setup.zip`
+`reinstall.bat` 下载安装器的顺序：
 
-全部失败才会回退官网 `cygwin.com` 直下。
+1. `cygwin_setup_url` 环境变量指定的自定义地址（自托管副本、可达的反代等）
+2. 官网 `http://www.cygwin.com/setup-*.exe` 直下
 
-如果镜像也不可用，可以在运行前设置环境变量自定义下载源：
+如果官网不可达，可以在运行前自托管一份安装器并设置环境变量：
 
 ```batch
-rem 自定义 Cygwin 安装器下载地址（优先使用）
+rem 自定义 Cygwin 安装器下载地址（优先使用，需自行自托管或找可达来源）
 set cygwin_setup_url=https://example.com/setup-x86_64.exe
 
-rem 自定义 Cygwin 包仓库地址（默认国内为 mirror.nju.edu.cn）
+rem 自定义 Cygwin 包仓库地址（默认国内为 mirror.nju.edu.cn，通常无需修改）
 set cygwin_site=https://mirrors.ustc.edu.cn/cygwin
 
 reinstall.bat debian 12 --password xxx

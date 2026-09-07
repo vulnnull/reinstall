@@ -11,8 +11,8 @@ rem cygwin_setup_url: setup 安装器下载地址（官方镜像站不同步安�
 rem   例如: set cygwin_setup_url=https://git.transnull.cn/raw/cygwin/setup-x86_64.exe
 rem cygwin_site: Cygwin 包仓库地址（默认国内用 mirror.nju.edu.cn）
 rem   例如: set cygwin_site=https://mirrors.ustc.edu.cn/cygwin
-set cygwin_setup_url=
-set cygwin_site=
+rem 注意：不要在这里 set cygwin_setup_url= / set cygwin_site= 清空，
+rem 否则会覆盖用户在运行前设置的同名环境变量
 
 set pkgs=curl,cpio,p7zip,dos2unix,jq,xz,gzip,zstd,openssl,bind-utils,libiconv,binutils
 set cmds=curl,cpio,p7zip,dos2unix,jq,xz,gzip,zstd,openssl,nslookup,iconv,ar
@@ -148,8 +148,8 @@ call :check_cygwin_installed || (
 
     rem 下载 Cygwin 安装器
     rem cygwin.com 在国内被墙且部分 IP 被官网拉黑
-    rem 官方镜像站不同步安装器 exe，但同步打包好的 setup.zip（内含 setup-x86.exe 和 setup-x86_64.exe）
-    rem 因此优先从国内镜像下载 setup.zip 解压，失败再从官网直下 exe
+    rem 国内镜像站不同步安装器 exe，其 setup.zip 也带故意的加密标志位无法使用
+    rem 因此优先用 cygwin_setup_url 自定义地址，失败再从官网直下 exe
     if not exist setup-!CygwinArch!.exe (
         call :download_cygwin_setup !CygwinArch! %~dp0setup-!CygwinArch!.exe || goto :download_failed
     )
@@ -213,48 +213,22 @@ rem https://learn.microsoft.com/en-us/windows/win32/bits/http-requirements-for-b
 rem bitsadmin /transfer "%~3" /priority foreground %~1 %~2
 
 :download_cygwin_setup
-rem 从国内镜像下载 setup.zip 并解压出安装器，全部失败再从官网直下 exe
+rem 下载 Cygwin 安装器
+rem 注意：国内镜像站的 cygwin/setup/setup.zip 带有故意的加密标志位（防止未认证使用），
+rem 无法解压出安装器，因此不要尝试从镜像 setup.zip 提取 exe
 rem 用法: call :download_cygwin_setup ^<x86^|x86_64^> ^<目标路径^>
 set setup_arch=%~1
 set setup_dest=%~2
 
-rem 优先使用用户自定义地址
+rem 优先使用用户自定义地址（自托管副本或可达的反代）
 if defined cygwin_setup_url (
     call :download !cygwin_setup_url! !setup_dest!
     if not errorlevel 1 exit /b 0
+    echo Download from cygwin_setup_url failed, fallback to cygwin.com
 )
 
-rem 依次尝试国内镜像的 setup.zip
-for %%M in (
-    https://mirror.tuna.tsinghua.edu.cn/cygwin/setup/setup.zip
-    https://mirrors.bfsu.edu.cn/cygwin/setup/setup.zip
-    https://mirrors.cernet.edu.cn/cygwin/setup/setup.zip
-    https://mirrors.huaweicloud.com/cygwin/setup/setup.zip
-) do (
-    echo Trying mirror: %%M
-    call :download %%M %~dp0cygwin-setup.zip
-    if not errorlevel 1 (
-        call :unzip %~dp0cygwin-setup.zip setup-!setup_arch!.exe !setup_dest!
-        if not errorlevel 1 (
-            del /q %~dp0cygwin-setup.zip
-            exit /b 0
-        )
-    )
-)
-
-rem 镜像全部失败，回退官网直下
-echo All mirrors failed, fallback to cygwin.com
+rem 回退官网直下
 call :download http://www.cygwin.com/setup-!setup_arch!.exe !setup_dest!
-exit /b !errorlevel!
-
-:unzip
-rem 解压 zip 中的单个文件
-rem win10 1803+ 自带 tar.exe（bsdtar，支持 zip）；旧系统回退 PowerShell Expand-Archive
-tar -xf "%~1" -C "%~dp0" "%~2" >nul 2>&1
-if not errorlevel 1 if exist "%~2" exit /b 0
-powershell -NoLogo -NoProfile -NonInteractive -Command "Expand-Archive -Force -LiteralPath '%~1' -DestinationPath '%~dp0cygwin-setup-extract'" >nul 2>&1
-if errorlevel 1 exit /b 1
-move /y "%~dp0cygwin-setup-extract\%~2" "%~3" >nul
 exit /b !errorlevel!
 
 :download
