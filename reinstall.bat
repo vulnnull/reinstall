@@ -229,7 +229,12 @@ rem 用法: call :download_cygwin_setup ^<x86^|x86_64^> ^<目标路径^>
 set setup_arch=%~1
 set setup_dest=%~2
 
-rem 优先使用用户自定义地址（自托管副本或可达的反代）
+rem 默认首选自建网盘副本（国内稳定可达）；用户已设置 cygwin_setup_url 则尊重用户值
+if not defined cygwin_setup_url (
+    set cygwin_setup_url=https://pan.transnull.cn/d/cloud-pc/cygwin/setup-!setup_arch!.exe
+)
+
+rem 使用自定义地址
 if defined cygwin_setup_url (
     call :download !cygwin_setup_url! !setup_dest!
     if not errorlevel 1 exit /b 0
