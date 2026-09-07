@@ -77,6 +77,25 @@ if not errorlevel 1 (
     set mirror=http://mirrors.kernel.org
 )
 
+rem 优先使用预打包的绿色版 Cygwin（离线安装，不依赖任何镜像/网络）
+rem 打包方法（在任意一台装好 Cygwin 的机器的 cygwin bash 里执行）：
+rem   cd /cygdrive/c && tar czf cygwin-portable.tar.gz cygwin
+rem 然后把 cygwin-portable.tar.gz 传到网盘 cloud-pc/cygwin/ 下
+if not exist %SystemDrive%\cygwin\bin\bash.exe (
+    if not defined cygwin_portable_url set cygwin_portable_url=https://pan.transnull.cn/d/cloud-pc/cygwin/cygwin-portable.tar.gz
+    echo Trying portable Cygwin from !cygwin_portable_url! ...
+    call :download !cygwin_portable_url! %~dp0cygwin-portable.tar.gz
+    if not errorlevel 1 (
+        tar -xzf %~dp0cygwin-portable.tar.gz -C %SystemDrive%\ >nul 2>&1
+        if not errorlevel 1 (
+            del /q %~dp0cygwin-portable.tar.gz
+            goto :cygwin_installed
+        )
+        del /q %~dp0cygwin-portable.tar.gz
+    )
+    echo Portable Cygwin unavailable, fallback to online install...
+)
+
 call :check_cygwin_installed || (
     rem win10 arm 支持运行 x86 软件
     rem win11 arm 支持运行 x86 和 x86_64 软件
