@@ -166,10 +166,22 @@ reinstall.bat debian 12 --password xxx
 certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
+PowerShell 下载（国外地址）：
+
+```powershell
+Invoke-WebRequest -OutFile reinstall.bat https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
+```
+
 国内服务器（cnb.cool 副本）：
 
 ```batch
 certutil -urlcache -f -split https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.bat
+```
+
+如果 certutil 被拦截（如 Windows Defender 实时保护未关闭），也可用 PowerShell 下载：
+
+```powershell
+Invoke-WebRequest -OutFile reinstall.bat https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.bat
 ```
 
 ## 使用

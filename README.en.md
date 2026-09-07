@@ -138,6 +138,12 @@ For server inside China (via the cnb.cool mirror of this fork):
 certutil -urlcache -f -split https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.bat
 ```
 
+PowerShell alternative (China mirror):
+
+```powershell
+Invoke-WebRequest -OutFile reinstall.bat https://cnb.cool/vulnnull/reinstall/-/git/raw/main/reinstall.bat
+```
+
 ## Usage
 
 **All features** can be used on both Linux and Windows.
