@@ -43,9 +43,11 @@ rem     md %tmp%
 rem )
 
 rem 下载 geoip
+rem 本 fork 默认服务器在国内：geoip 不存在时直接写 loc=CN，跳过 qualcomm.cn 探测
+rem （该探测地址部分网络不可达，且 certutil 无超时会导致脚本卡死）
+rem 如需国外镜像源，请手工创建 geoip 文件并写入 loc=US 等非 CN 值
 if not exist geoip (
-    rem www.cloudflare.com/dash.cloudflare.com 国内访问的是美国服务器，而且部分地区被墙
-    call :download http://www.qualcomm.cn/cdn-cgi/trace %~dp0geoip || goto :download_failed
+    echo loc=CN> %~dp0geoip
 )
 
 rem 判断是否有 loc=
