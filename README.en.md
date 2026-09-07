@@ -1,5 +1,10 @@
 <!-- markdownlint-disable MD028 MD033 MD045 -->
 
+> [!NOTE]
+> This is a fork of [bin456789/reinstall](https://github.com/bin456789/reinstall), maintained by [vulnnull](https://github.com/vulnnull).
+>
+> **Changes in this fork**: The Cygwin installer download on Windows now tries Chinese mirrors first (TUNA / BFSU / CERNET / Huawei Cloud) before falling back to cygwin.com, and supports the `cygwin_setup_url` / `cygwin_site` environment variables for custom sources. See [README.md](README.md) (Chinese) for details.
+
 # reinstall
 
 [![Codacy](https://img.shields.io/codacy/grade/dc679a17751448628fe6d8ac35e26eed?logo=Codacy&label=Codacy&style=flat-square)](https://app.codacy.com/gh/bin456789/reinstall/dashboard)
@@ -91,13 +96,13 @@ The system requirements for the target system are as follows:
 For server outside China:
 
 ```bash
-curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 For server inside China:
 
 ```bash
-curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 ## Download (Current system is <img width="20" height="20" src="https://blogs.windows.com/wp-content/uploads/prod/2022/09/cropped-Windows11IconTransparent512-32x32.png" /> Windows)
@@ -113,7 +118,7 @@ Due to lack of support for TLS 1.2, SHA-256, or outdated root certificates, Wind
 
 Use Internet Explorer (enable TLS 1.2 in IE's advanced settings first) to download, or use Remote Desktop to save the following two files into the same directory:
 
-- <https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat>
+- <https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat>
 
 - <https://www.cygwin.com/setup-x86.exe>
 
@@ -124,13 +129,13 @@ To use, run the downloaded `reinstall.bat`.
 For server outside China:
 
 ```batch
-certutil -urlcache -f -split https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat
+certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
 For server inside China:
 
 ```batch
-certutil -urlcache -f -split https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.bat
+certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
 ## Usage

@@ -2,6 +2,15 @@
 
 # reinstall
 
+> [!NOTE]
+> 这是 [bin456789/reinstall](https://github.com/bin456789/reinstall) 的 fork，由 [vulnnull](https://github.com/vulnnull) 维护。
+>
+> **本 fork 的改动**：
+>
+> - Windows 下 Cygwin 安装器下载改为国内镜像优先（清华 TUNA / 北外 / CERNET / 华为云），全部失败再回退 `cygwin.com` 官网，解决官网被墙、部分 IP 被拉黑的问题
+> - 新增环境变量 `cygwin_setup_url` / `cygwin_site`，可自定义 Cygwin 安装器下载地址与包仓库地址
+> - 详见 [reinstall.bat](reinstall.bat) 中的 `:download_cygwin_setup` 部分
+
 [![Codacy](https://img.shields.io/codacy/grade/dc679a17751448628fe6d8ac35e26eed?logo=Codacy&label=Codacy&style=flat-square)](https://app.codacy.com/gh/bin456789/reinstall/dashboard)
 [![CodeFactor](https://img.shields.io/codefactor/grade/github/bin456789/reinstall?logo=CodeFactor&logoColor=white&label=CodeFactor&style=flat-square)](https://www.codefactor.io/repository/github/bin456789/reinstall)
 [![Lines of Code](https://aschey.tech/tokei/github/bin456789/reinstall?category=code&label=Lines%20of%20Code&style=flat-square)](https://github.com/aschey/vercel-tokei)
@@ -91,13 +100,13 @@
 国外服务器：
 
 ```bash
-curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 国内服务器：
 
 ```bash
-curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://www.ghproxy.cc/https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 ## 下载（当前系统是 <img width="20" height="20" src="https://blogs.windows.com/wp-content/uploads/prod/2022/09/cropped-Windows11IconTransparent512-32x32.png" /> Windows）
@@ -113,7 +122,7 @@ curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget
 
 用 IE 下载 (先在 IE 高级设置里启用 TLS 1.2)，或者通过远程桌面，将这两个文件保存到同一个目录
 
-- <https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat>
+- <https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat>
 
 - <https://www.cygwin.com/setup-x86.exe>
 
@@ -121,16 +130,43 @@ curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget
 
 </details>
 
+<details>
+
+<summary>解决 Cygwin 安装器下载失败（被墙 / IP 被拉黑）</summary>
+
+`reinstall.bat` 下载 Cygwin 安装器时会自动依次尝试国内镜像的 `setup.zip`（内含官方安装器，与官网同源）：
+
+1. 清华 TUNA - `https://mirror.tuna.tsinghua.edu.cn/cygwin/setup/setup.zip`
+2. 北外 BFSU - `https://mirrors.bfsu.edu.cn/cygwin/setup/setup.zip`
+3. CERNET - `https://mirrors.cernet.edu.cn/cygwin/setup/setup.zip`
+4. 华为云 - `https://mirrors.huaweicloud.com/cygwin/setup/setup.zip`
+
+全部失败才会回退官网 `cygwin.com` 直下。
+
+如果镜像也不可用，可以在运行前设置环境变量自定义下载源：
+
+```batch
+rem 自定义 Cygwin 安装器下载地址（优先使用）
+set cygwin_setup_url=https://example.com/setup-x86_64.exe
+
+rem 自定义 Cygwin 包仓库地址（默认国内为 mirror.nju.edu.cn）
+set cygwin_site=https://mirrors.ustc.edu.cn/cygwin
+
+reinstall.bat debian 12 --password xxx
+```
+
+</details>
+
 国外服务器：
 
 ```batch
-certutil -urlcache -f -split https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat
+certutil -urlcache -f -split https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
 国内服务器：
 
 ```batch
-certutil -urlcache -f -split https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.bat
+certutil -urlcache -f -split https://www.ghproxy.cc/https://raw.githubusercontent.com/vulnnull/reinstall/main/reinstall.bat
 ```
 
 ## 使用
