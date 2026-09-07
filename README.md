@@ -7,8 +7,8 @@
 >
 > **本 fork 的改动**：
 >
-> - Windows 下 Cygwin 安装器下载支持 `cygwin_setup_url` / `cygwin_site` 环境变量自定义下载源，解决 `cygwin.com` 被墙、部分 IP 被拉黑的问题
-> - 注意：国内镜像站的 `cygwin/setup/setup.zip` 带有故意的加密标志位（防止未认证使用），无法解压出安装器，不要尝试从镜像提取
+> - Windows 下 Cygwin 安装器下载链：`cygwin_setup_url` 自定义地址 → 国内镜像 `setup.zip`（解压密码见下）→ `cygwin.com` 官网回退，解决官网被墙、部分 IP 被拉黑的问题
+> - 新增环境变量 `cygwin_setup_url` / `cygwin_site`，可自定义 Cygwin 安装器下载地址与包仓库地址
 > - 详见 [reinstall.bat](reinstall.bat) 中的 `:download_cygwin_setup` 部分
 
 [![Codacy](https://img.shields.io/codacy/grade/dc679a17751448628fe6d8ac35e26eed?logo=Codacy&label=Codacy&style=flat-square)](https://app.codacy.com/gh/bin456789/reinstall/dashboard)
@@ -134,17 +134,19 @@ curl -O https://ghproxy.imciel.com/https://raw.githubusercontent.com/vulnnull/re
 
 <summary>解决 Cygwin 安装器下载失败（被墙 / IP 被拉黑）</summary>
 
-> [!WARNING]
-> 国内镜像站（TUNA / 北外 / CERNET / 华为云等）**不同步** `setup-x86_64.exe` 安装器；
-> 它们目录里的 `cygwin/setup/setup.zip` 带有**故意的加密标志位**（镜像 README 明确要求"不要使用这些文件"），
-> 无法解压出安装器，请勿尝试从镜像提取。
+> [!NOTE]
+> 国内镜像站（TUNA / 北外 / CERNET / 华为云等）不同步单独的 `setup-x86_64.exe`，
+> 只提供 `cygwin/setup/setup.zip`。该 zip 带有**故意的加密标志位**（相当于"知情同意门"），
+> 解压密码为：`I understand and accept the risks`
+> 脚本用 win10 1803+ 自带的 `tar.exe`（bsdtar/libarchive，支持 ZipCrypto）经 stdin 喂入密码解压。
 
 `reinstall.bat` 下载安装器的顺序：
 
 1. `cygwin_setup_url` 环境变量指定的自定义地址（自托管副本、可达的反代等）
-2. 官网 `http://www.cygwin.com/setup-*.exe` 直下
+2. 国内镜像的 `setup.zip`：清华 TUNA → 北外 BFSU → CERNET → 华为云，下载后解压出安装器
+3. 官网 `http://www.cygwin.com/setup-*.exe` 直下（回退）
 
-如果官网不可达，可以在运行前自托管一份安装器并设置环境变量：
+如果镜像全部不可用，可以在运行前自托管一份安装器并设置环境变量：
 
 ```batch
 rem 自定义 Cygwin 安装器下载地址（优先使用，需自行自托管或找可达来源）

@@ -148,8 +148,8 @@ call :check_cygwin_installed || (
 
     rem 下载 Cygwin 安装器
     rem cygwin.com 在国内被墙且部分 IP 被官网拉黑
-    rem 国内镜像站不同步安装器 exe，其 setup.zip 也带故意的加密标志位无法使用
-    rem 因此优先用 cygwin_setup_url 自定义地址，失败再从官网直下 exe
+    rem 国内镜像站不同步安装器 exe，只有带故意加密标志的 setup.zip（密码见 :download_cygwin_setup）
+    rem 因此下载顺序为: cygwin_setup_url 自定义地址 → 镜像 setup.zip → 官网直下 exe
     if not exist setup-!CygwinArch!.exe (
         call :download_cygwin_setup !CygwinArch! %~dp0setup-!CygwinArch!.exe || goto :download_failed
     )
@@ -213,9 +213,12 @@ rem https://learn.microsoft.com/en-us/windows/win32/bits/http-requirements-for-b
 rem bitsadmin /transfer "%~3" /priority foreground %~1 %~2
 
 :download_cygwin_setup
-rem 下载 Cygwin 安装器
-rem 注意：国内镜像站的 cygwin/setup/setup.zip 带有故意的加密标志位（防止未认证使用），
-rem 无法解压出安装器，因此不要尝试从镜像 setup.zip 提取 exe
+rem 下载 Cygwin 安装器：cygwin_setup_url 自定义地址 → 国内镜像 setup.zip → 官网直下
+rem 说明：国内镜像站不同步单独的 exe，只有 cygwin/setup/setup.zip
+rem 该 zip 带故意的加密标志位（"知情同意门"），解压密码为：
+rem   I understand and accept the risks
+rem win10 1803+ 自带的 tar.exe（bsdtar/libarchive）支持 ZipCrypto，
+rem 可通过 stdin 重定向密码文件解压；旧系统 tar 不支持时自动跳过该镜像
 rem 用法: call :download_cygwin_setup ^<x86^|x86_64^> ^<目标路径^>
 set setup_arch=%~1
 set setup_dest=%~2
@@ -224,10 +227,35 @@ rem 优先使用用户自定义地址（自托管副本或可达的反代）
 if defined cygwin_setup_url (
     call :download !cygwin_setup_url! !setup_dest!
     if not errorlevel 1 exit /b 0
-    echo Download from cygwin_setup_url failed, fallback to cygwin.com
+    echo Download from cygwin_setup_url failed, fallback to mirrors
 )
 
-rem 回退官网直下
+rem 写入解压密码文件（set /p 不带换行，libarchive 兼容 EOF 结尾）
+<nul set /p ="I understand and accept the risks">%~dp0cygwin-pw.txt
+
+rem 依次尝试国内镜像的 setup.zip
+for %%M in (
+    https://mirror.tuna.tsinghua.edu.cn/cygwin/setup/setup.zip
+    https://mirrors.bfsu.edu.cn/cygwin/setup/setup.zip
+    https://mirrors.cernet.edu.cn/cygwin/setup/setup.zip
+    https://mirrors.huaweicloud.com/cygwin/setup/setup.zip
+) do (
+    echo Trying mirror: %%M
+    call :download %%M %~dp0cygwin-setup.zip
+    if not errorlevel 1 (
+        tar -xf %~dp0cygwin-setup.zip -C %~dp0 setup-!setup_arch!.exe < %~dp0cygwin-pw.txt >nul 2>&1
+        if not errorlevel 1 if exist !setup_dest! (
+            del /q %~dp0cygwin-setup.zip %~dp0cygwin-pw.txt
+            exit /b 0
+        )
+    )
+)
+
+rem 密码文件清理
+del /q %~dp0cygwin-pw.txt 2>nul
+
+rem 镜像全部失败，回退官网直下
+echo All mirrors failed, fallback to cygwin.com
 call :download http://www.cygwin.com/setup-!setup_arch!.exe !setup_dest!
 exit /b !errorlevel!
 

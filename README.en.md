@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is a fork of [bin456789/reinstall](https://github.com/bin456789/reinstall), maintained by [vulnnull](https://github.com/vulnnull).
 >
-> **Changes in this fork**: The Cygwin installer download on Windows supports the `cygwin_setup_url` / `cygwin_site` environment variables for custom sources (cygwin.com is blocked for many Chinese IPs). Note that Chinese mirrors do NOT carry the installer, and their `cygwin/setup/setup.zip` is deliberately encrypted and unusable. See [README.md](README.md) (Chinese) for details.
+> **Changes in this fork**: The Cygwin installer download on Windows tries, in order: the `cygwin_setup_url` environment variable, Chinese mirrors' `setup.zip` (deliberately encrypted; password: `I understand and accept the risks`; extracted with the built-in bsdtar via stdin), then falls back to cygwin.com. Also adds `cygwin_site` for the package repository. See [README.md](README.md) (Chinese) for details.
 
 # reinstall
 
